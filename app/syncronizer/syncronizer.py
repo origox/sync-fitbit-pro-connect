@@ -28,6 +28,8 @@ class Syncronizer:
         date: date to syncronize
         resource_list: list of measurements to syncronize
         """
+        logging.info(f"Syncing Fitbit activities for date: {date}")
+
         fitbit_data = self.fitbitClient.get_intraday_activity_by_date(
             date, resource_list
         )
@@ -50,6 +52,7 @@ class Syncronizer:
         start_time: not used at the moment
         end_time: not used at the moment
         """
+        logging.info(f"Syncing Fitbit data from {start_date} to {end_date}")
 
         # HRV
         results = self.fitbitClient.get_intraday_hrv_by_interval(

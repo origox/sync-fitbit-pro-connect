@@ -91,6 +91,12 @@ class FitbitOauth2Client:
             "fitbit-rate-limit-reset",
         ]
 
+        remaining = int(headers.get("fitbit-rate-limit-remaining", 0))
+        reset = int(headers.get("fitbit-rate-limit-reset", 0))
+        if remaining < 10:
+            logging.info(f"Rate limit reached, sleeping for {reset} seconds + 120s")
+            time.sleep(reset + 120)
+
         for header in rate_limit_headers:
             if header in headers:
                 logging.info(f"{header}: {int(headers.get(header))}")
