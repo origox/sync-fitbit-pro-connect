@@ -14,7 +14,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 
 LOCAL_TIMEZONE = pytz.timezone(os.environ.get("FITBIT_LOCAL_TIMEZONE"))
-DEVICENAME = os.environ.get("FITBIT_DEVICENAME")
+# self.device_name = os.environ.get("FITBIT_DEVICENAME")
 
 
 RESOURCE = {
@@ -147,11 +147,18 @@ class FitbitOauth2Client:
 
 class FitbitClient:
     def __init__(
-        self, client_id: str = None, client_secret: str = None, token_path: str = None
+        self,
+        client_id: str = None,
+        client_secret: str = None,
+        token_path: str = None,
+        device_name: str = None,
+        local_timezone: str = None,
     ):
         self.client_id = client_id or os.getenv(key="FITBIT_CLIENT_ID")
         self.client_secret = client_secret or os.getenv(key="FITBIT_CLIENT_SECRET")
         self.token_path = token_path or os.getenv(key="TOKEN_FILE_PATH")
+        self.device_name = device_name
+        self.local_timezone = local_timezone
 
         self.client = FitbitOauth2Client(
             client_id=self.client_id,
@@ -189,7 +196,7 @@ class FitbitClient:
                         {
                             "measurement": measurement[1],
                             "time": utc_time,
-                            "tags": {"Device": DEVICENAME},
+                            "tags": {"Device": self.device_name},
                             "fields": {"value": int(value["value"] * measurement[3])},
                         }
                     )
@@ -230,7 +237,7 @@ class FitbitClient:
                     {
                         "measurement": "HRV_Intraday",
                         "time": utc_time,
-                        "tags": {"Device": DEVICENAME},
+                        "tags": {"Device": self.device_name},
                         "fields": {
                             "dailyRmssd": data["value"]["dailyRmssd"],
                             "deepRmssd": data["value"]["deepRmssd"],
@@ -261,7 +268,7 @@ class FitbitClient:
                     {
                         "measurement": "HR zones",
                         "time": utc_time,
-                        "tags": {"Device": DEVICENAME},
+                        "tags": {"Device": self.device_name},
                         "fields": {
                             "Normal": data["value"]["heartRateZones"][0]["minutes"],
                             "Fat Burn": data["value"]["heartRateZones"][1]["minutes"],
@@ -275,7 +282,7 @@ class FitbitClient:
                         {
                             "measurement": "RestingHR",
                             "time": utc_time,
-                            "tags": {"Device": DEVICENAME},
+                            "tags": {"Device": self.device_name},
                             "fields": {"value": data["value"]["restingHeartRate"]},
                         }
                     )
@@ -333,7 +340,7 @@ class FitbitClient:
                     {
                         "measurement": "TempSkin",
                         "time": utc_time,
-                        "tags": {"Device": DEVICENAME},
+                        "tags": {"Device": self.device_name},
                         "fields": {
                             "temp": data["value"]["nightlyRelative"],
                         },
@@ -363,7 +370,7 @@ class FitbitClient:
                     {
                         "measurement": "CardioScore",
                         "time": utc_time,
-                        "tags": {"Device": DEVICENAME},
+                        "tags": {"Device": self.device_name},
                         "fields": {
                             "vo2Low": list(
                                 map(int, data["value"]["vo2Max"].split("-"))
@@ -407,7 +414,7 @@ class FitbitClient:
                         "measurement": "Sleep Summary",
                         "time": utc_time,
                         "tags": {
-                            "Device": DEVICENAME,
+                            "Device": self.device_name,
                             "isMainSleep": record["isMainSleep"],
                         },
                         "fields": {
@@ -445,7 +452,7 @@ class FitbitClient:
                             "measurement": "Sleep Levels",
                             "time": utc_time,
                             "tags": {
-                                "Device": DEVICENAME,
+                                "Device": self.device_name,
                                 "isMainSleep": record["isMainSleep"],
                             },
                             "fields": {
@@ -463,7 +470,7 @@ class FitbitClient:
                         "measurement": "Sleep Levels",
                         "time": utc_wake_time,
                         "tags": {
-                            "Device": DEVICENAME,
+                            "Device": self.device_name,
                             "isMainSleep": record["isMainSleep"],
                         },
                         "fields": {
@@ -505,9 +512,9 @@ class FitbitClient:
                     "fields": {"value": float(device["batteryLevel"])},
                 }
             )
-            logging.info("Recorded battery level for " + DEVICENAME)
+            logging.info("Recorded battery level for " + self.device_name)
         else:
-            logging.error("Recording battery level failed : " + DEVICENAME)
+            logging.error("Recording battery level failed : " + self.device_name)
 
         return collected_records
 
@@ -531,7 +538,7 @@ class FitbitClient:
                     {
                         "measurement": "BreathingRate",
                         "time": utc_time,
-                        "tags": {"Device": DEVICENAME},
+                        "tags": {"Device": self.device_name},
                         "fields": {"value": data["value"]["breathingRate"]},
                     }
                 )
@@ -568,7 +575,7 @@ class FitbitClient:
                         {
                             "measurement": "SPO2_Intraday",
                             "time": utc_time,
-                            "tags": {"Device": DEVICENAME},
+                            "tags": {"Device": self.device_name},
                             "fields": {
                                 "value": float(record["value"]),
                             },
@@ -599,7 +606,7 @@ class FitbitClient:
                     {
                         "measurement": "SPO2",
                         "time": utc_time,
-                        "tags": {"Device": DEVICENAME},
+                        "tags": {"Device": self.device_name},
                         "fields": {
                             "avg": data["value"]["avg"],
                             "max": data["value"]["max"],

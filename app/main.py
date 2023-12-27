@@ -19,7 +19,13 @@ def main() -> None:
         ],
     )
 
-    fitbitClient = fitbit.FitbitClient()
+    fitbitClient = fitbit.FitbitClient(
+        os.getenv(key="FITBIT_CLIENT_ID"),
+        os.getenv(key="FITBIT_CLIENT_SECRET"),
+        os.getenv(key="FITBIT_TOKEN_FILE_PATH"),
+        device_name=os.getenv(key="FITBIT_DEVICE_NAME"),
+        local_timezone=os.getenv(key="FITBIT_LOCAL_TIMEZONE"),
+    )
 
     dbClient = db.InfluxDBClient(
         host=os.getenv(key="INFLUXDB_HOST"),
