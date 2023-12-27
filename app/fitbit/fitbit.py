@@ -13,9 +13,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Load environment variables
 load_dotenv()
 
-LOCAL_TIMEZONE = pytz.timezone(os.environ.get("LOCAL_TIMEZONE"))
-DEVICENAME = os.environ.get("DEVICENAME")
-# FITBIT_LOG_FILE_PATH = "./logs/fitbit.log"
+LOCAL_TIMEZONE = pytz.timezone(os.environ.get("FITBIT_LOCAL_TIMEZONE"))
+DEVICENAME = os.environ.get("FITBIT_DEVICENAME")
+
 
 RESOURCE = {
     "calories": "calories",
