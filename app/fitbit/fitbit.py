@@ -26,6 +26,7 @@ RESOURCE = {
 }
 
 
+# TODO: Refactor token handling
 class FitbitOauth2Client:
     def __init__(self, client_id, client_secret, token_path):
         self.client_id = client_id
@@ -612,95 +613,3 @@ class FitbitClient:
                 "Recording failed : Avg SPO2 for date " + start_date + " to " + end_date
             )
         return collected_records
-
-    ###########################################################################################################################################
-    def get_daily_data_limit_365d(self, start_date_str, end_date_str):
-        collected_records = []
-        activity_minutes_list = [
-            "minutesSedentary",
-            "minutesLightlyActive",
-            "minutesFairlyActive",
-            "minutesVeryActive",
-        ]
-        for activity_type in activity_minutes_list:
-            activity_minutes_data_list = self.client.make_request(
-                "https://api.fitbit.com/1/user/-/activities/tracker/"
-                + activity_type
-                + "/date/"
-                + start_date_str
-                + "/"
-                + end_date_str
-                + ".json"
-            )["activities-tracker-" + activity_type]
-            if activity_minutes_data_list != None:
-                for data in activity_minutes_data_list:
-                    log_time = datetime.fromisoformat(
-                        data["dateTime"] + "T" + "00:00:00"
-                    )
-                    utc_time = (
-                        LOCAL_TIMEZONE.localize(log_time)
-                        .astimezone(pytz.utc)
-                        .isoformat()
-                    )
-                    collected_records.append(
-                        {
-                            "measurement": "Activity Minutes",
-                            "time": utc_time,
-                            "tags": {"Device": DEVICENAME},
-                            "fields": {activity_type: int(data["value"])},
-                        }
-                    )
-                # logging.info("Recorded " + activity_type + "for date " + start_date_str + " to " + end_date_str)
-            else:
-                # logging.error("Recording failed : " + activity_type + " for date " + start_date_str + " to " + end_date_str)
-                apa = 1
-
-        activity_others_list = ["distance", "calories", "steps"]
-        for activity_type in activity_others_list:
-            activity_others_data_list = self.client.make_request(
-                "https://api.fitbit.com/1/user/-/activities/tracker/"
-                + activity_type
-                + "/date/"
-                + start_date_str
-                + "/"
-                + end_date_str
-                + ".json"
-            )["activities-tracker-" + activity_type]
-            if activity_others_data_list != None:
-                for data in activity_others_data_list:
-                    log_time = datetime.fromisoformat(
-                        data["dateTime"] + "T" + "00:00:00"
-                    )
-                    utc_time = (
-                        LOCAL_TIMEZONE.localize(log_time)
-                        .astimezone(pytz.utc)
-                        .isoformat()
-                    )
-                    activity_name = (
-                        "Total Steps" if activity_type == "steps" else activity_type
-                    )
-                    collected_records.append(
-                        {
-                            "measurement": activity_name,
-                            "time": utc_time,
-                            "tags": {"Device": DEVICENAME},
-                            "fields": {"value": float(data["value"])},
-                        }
-                    )
-                logging.info(
-                    "Recorded "
-                    + activity_name
-                    + " for date "
-                    + start_date_str
-                    + " to "
-                    + end_date_str
-                )
-            else:
-                logging.error(
-                    "Recording failed : "
-                    + activity_name
-                    + " for date "
-                    + start_date_str
-                    + " to "
-                    + end_date_str
-                )
