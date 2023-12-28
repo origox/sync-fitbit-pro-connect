@@ -1,5 +1,5 @@
 # sync-fitbit-pro-connect
-[![Python Linting](https://github.com/origox/sync-fitbit-pro-connect/actions/workflows/ci.yaml/badge.svg)](https://github.com/origox/sync-fitbit-pro-connect/actions/workflows/ci.yaml)
+[![CI/CD Workflow](https://github.com/origox/sync-fitbit-pro-connect/actions/workflows/main.yaml/badge.svg)](https://github.com/origox/sync-fitbit-pro-connect/actions/workflows/main.yaml)
 
 # Prereqs
 These steps need to be performed if there are no access and refresh tokens.
