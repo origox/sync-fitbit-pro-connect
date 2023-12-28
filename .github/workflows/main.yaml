@@ -94,6 +94,7 @@ jobs:
           command: quickview, cves
           only-severities: high, critical
           sarif-file: scout-report.sarif
+          exit-code: true
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
