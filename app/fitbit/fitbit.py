@@ -28,7 +28,14 @@ RESOURCE = {
 
 # TODO: Refactor token handling
 class FitbitOauth2Client:
-    def __init__(self, client_id, client_secret, token_path):
+    def __init__(
+        self,
+        client_id,
+        client_secret,
+        token_path,
+        initial_access_token=None,
+        initial_refresh_token=None,
+    ):
         self.client_id = client_id
         self.client_secret = client_secret
         self.token_path = token_path
@@ -37,12 +44,26 @@ class FitbitOauth2Client:
             self.access_token, self.refresh_token = self.load_tokens_from_file()
 
         except FileNotFoundError:
-            logging.exception("No token file found, refreshing tokens")
-
-            self.access_token, self.refresh_token = self._refresh_tokens(
-                client_id=self.client_id,
-                client_secret=self.client_secret,
+            logging.exception(
+                "No token file found, creating new file with initial tokens"
             )
+
+            self.access_token = initial_access_token
+            self.refresh_token = initial_refresh_token
+
+            tokens = {
+                "access_token": self.access_token,
+                "refresh_token": self.refresh_token,
+            }
+            with open(self.token_path, "w+") as file:
+                json.dump(tokens, file)
+
+            # logging.exception("No token file found, refreshing tokens")
+
+            # self.access_token, self.refresh_token = self._refresh_tokens(
+            #     client_id=self.client_id,
+            #     client_secret=self.client_secret,
+            # )
 
     def make_request(
         self,
@@ -159,12 +180,20 @@ class FitbitClient:
         client_id: str = None,
         client_secret: str = None,
         token_path: str = None,
+        initial_access_token=None,
+        initial_refresh_token=None,
         device_name: str = None,
         local_timezone: str = None,
     ):
         self.client_id = client_id or os.getenv(key="FITBIT_CLIENT_ID")
         self.client_secret = client_secret or os.getenv(key="FITBIT_CLIENT_SECRET")
         self.token_path = token_path or os.getenv(key="TOKEN_FILE_PATH")
+        self.initial_access_token = initial_access_token or os.getenv(
+            key="FITBIT_INITIAL_ACCESS_TOKEN"
+        )
+        self.initial_refresh_token = initial_refresh_token or os.getenv(
+            key="FITBIT_INITIAL_REFRESH_TOKEN"
+        )
         self.device_name = device_name
         self.local_timezone = local_timezone
 
@@ -172,6 +201,8 @@ class FitbitClient:
             client_id=self.client_id,
             client_secret=self.client_secret,
             token_path=self.token_path,
+            initial_access_token=self.initial_access_token,
+            initial_refresh_token=self.initial_refresh_token,
         )
 
     def get_intraday_activity_by_date(self, date_str, measurement_list):

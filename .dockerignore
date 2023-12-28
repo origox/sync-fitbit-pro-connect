@@ -1,10 +1,14 @@
 **/__pycache__
 **/.venv
+**/venv
+**/tests
 **/.classpath
 **/.dockerignore
 **/.env
+**/fitbit_tokens.json
 **/.git
 **/.gitignore
+**/.github  
 **/.project
 **/.settings
 **/.toolstarget
