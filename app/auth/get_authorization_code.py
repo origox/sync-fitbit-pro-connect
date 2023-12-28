@@ -94,6 +94,7 @@ def main():
         url=token_url,
         headers=headers,
         data=data,
+        timeout=os.getenv(key="REQUEST_TIMEOUT"),
     )
 
     # Check that the response status code is 200 (OK)

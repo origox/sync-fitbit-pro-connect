@@ -14,7 +14,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 
 LOCAL_TIMEZONE = pytz.timezone(os.environ.get("FITBIT_LOCAL_TIMEZONE"))
-# self.device_name = os.environ.get("FITBIT_DEVICENAME")
+REQUEST_TIMEOUT = 30
 
 
 RESOURCE = {
@@ -99,9 +99,13 @@ class FitbitOauth2Client:
 
     def _send_request(self, url, headers, data, request_type):
         if request_type == "GET":
-            return requests.get(url, headers=headers, data=data)
+            return requests.get(
+                url, headers=headers, data=data, timeout=REQUEST_TIMEOUT
+            )
         elif request_type == "POST":
-            return requests.post(url, headers=headers, data=data)
+            return requests.post(
+                url, headers=headers, data=data, timeout=REQUEST_TIMEOUT
+            )
         else:
             raise Exception("Invalid request type")
 
