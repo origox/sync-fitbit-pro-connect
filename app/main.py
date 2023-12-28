@@ -56,12 +56,12 @@ def main() -> None:
     # print("Done")
 
     # Schedule syncronizer
-    schedule.every(interval=5).minutes.do(
+    schedule.every(interval=1).minutes.do(
         job_func=syncHelper.SyncFitbitActivitiesToInfluxdb,
         date=datetime.now().strftime("%Y-%m-%d"),
     )
 
-    schedule.every(interval=5).minutes.do(
+    schedule.every(interval=1).minutes.do(
         job_func=syncHelper.SyncFitbitToInfluxdb,
         start_date=datetime.now().strftime("%Y-%m-%d"),
         end_date=datetime.now().strftime("%Y-%m-%d"),

@@ -34,6 +34,7 @@ Note, Same process can be follow here: https://dev.fitbit.com/build/reference/we
 |Get Sleep Log by Date Range|/1.2/user/[user-id]/sleep/date/[startDate]/[endDate].json|*get_sleep_log_by_interval|sleep|100 days|Sleep Summary/Sleep Levels||
 |Get Temperature (Skin) Summary by Interval|/1/user/[user-id]/temp/skin/date/[start-date]/[end-date].json|*get_temperature_skin_by_interval|temperature|30 days|TempSkin||
 |Get SpO2 Summary by Interval|/1/user/[user-id]/spo2/date/[start-date]/[end-date].json|*get_spo2_summary_by_interval|oxygen_saturation|None|SPO2|
+|Get Activity Time Series by Date Range|/1/user/[user-id]/activities/[resource-path]/date/[start-date]/[end-date].json|*get_activity_summary_by_interval|activity|1095|[distance/calories/steps/Activity Minutes]|
 
 # API - Device
 | Resource | API | Internal API | Scope | Limit | InfluxDB - bucket | Grafana |

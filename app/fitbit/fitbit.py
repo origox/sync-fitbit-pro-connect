@@ -91,12 +91,6 @@ class FitbitOauth2Client:
             "fitbit-rate-limit-reset",
         ]
 
-        remaining = int(headers.get("fitbit-rate-limit-remaining", 0))
-        reset = int(headers.get("fitbit-rate-limit-reset", 0))
-        if remaining < 10:
-            logging.info(f"Rate limit reached, sleeping for {reset} seconds + 120s")
-            time.sleep(reset + 120)
-
         for header in rate_limit_headers:
             if header in headers:
                 logging.info(f"{header}: {int(headers.get(header))}")
@@ -110,7 +104,15 @@ class FitbitOauth2Client:
                 # Update the headers with the new access token
                 headers["Authorization"] = f"Bearer {self.access_token}"
                 # Resend the request with the refreshed tokens
+                logging.info(
+                    f"Resending request url: {url} headers: {headers} data: {data} request_type: {request_type}"
+                )
                 resp = self._send_request(url, headers, data, request_type)
+        if resp.status_code == 429:
+            reset = int(resp.headers.get("fitbit-rate-limit-reset", 0))
+            logging.info(f"Rate limit reached, sleeping for {reset} seconds")
+            time.sleep(reset)
+            resp = self._send_request(url, headers, data, request_type)
         return resp
 
     def _refresh_tokens(self, client_id: str, client_secret: str) -> Dict:
@@ -133,7 +135,7 @@ class FitbitOauth2Client:
         self.refresh_token = json_data["refresh_token"]
 
         logging.info(
-            f"access_token: {self.access_token} - refresh_token: {self.refresh_token}"
+            f"New access_token: {self.access_token} - New refresh_token: {self.refresh_token}"
         )
 
         tokens = {
@@ -625,4 +627,112 @@ class FitbitClient:
             logging.error(
                 "Recording failed : Avg SPO2 for date " + start_date + " to " + end_date
             )
+        return collected_records
+
+    # get activity summary
+    def get_activity_summary_by_interval(self, start_date: str, end_date: str):
+        collected_records = []
+
+        activity_minutes_list = [
+            "minutesSedentary",
+            "minutesLightlyActive",
+            "minutesFairlyActive",
+            "minutesVeryActive",
+        ]
+        for activity_type in activity_minutes_list:
+            activity_minutes_data_list = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/activities/tracker/"
+                + activity_type
+                + "/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
+            )["activities-tracker-" + activity_type]
+            if activity_minutes_data_list != None:
+                for data in activity_minutes_data_list:
+                    log_time = datetime.fromisoformat(
+                        data["dateTime"] + "T" + "00:00:00"
+                    )
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": "Activity Minutes",
+                            "time": utc_time,
+                            "tags": {"Device": self.device_name},
+                            "fields": {activity_type: int(data["value"])},
+                        }
+                    )
+                logging.info(
+                    "Recorded "
+                    + activity_type
+                    + "for date "
+                    + start_date
+                    + " to "
+                    + end_date
+                )
+            else:
+                logging.error(
+                    "Recording failed : "
+                    + activity_type
+                    + " for date "
+                    + start_date
+                    + " to "
+                    + end_date
+                )
+
+        activity_others_list = ["distance", "calories", "steps"]
+        for activity_type in activity_others_list:
+            activity_others_data_list = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/activities/tracker/"
+                + activity_type
+                + "/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
+            )["activities-tracker-" + activity_type]
+
+            if activity_others_data_list != None:
+                for data in activity_others_data_list:
+                    log_time = datetime.fromisoformat(
+                        data["dateTime"] + "T" + "00:00:00"
+                    )
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    activity_name = (
+                        "Total Steps" if activity_type == "steps" else activity_type
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": activity_name,
+                            "time": utc_time,
+                            "tags": {"Device": self.device_name},
+                            "fields": {"value": float(data["value"])},
+                        }
+                    )
+                logging.info(
+                    "Recorded "
+                    + activity_name
+                    + " for date "
+                    + start_date
+                    + " to "
+                    + end_date
+                )
+            else:
+                logging.error(
+                    "Recording failed : "
+                    + activity_name
+                    + " for date "
+                    + start_date
+                    + " to "
+                    + end_date
+                )
         return collected_records

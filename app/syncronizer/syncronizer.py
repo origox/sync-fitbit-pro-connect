@@ -101,3 +101,9 @@ class Syncronizer:
             start_date=start_date, end_date=end_date
         )
         self.dbClient.write_points_to_influxdb(points=results)
+
+        # Activity Summary
+        results = self.fitbitClient.get_activity_summary_by_interval(
+            start_date=start_date, end_date=end_date
+        )
+        self.dbClient.write_points_to_influxdb(points=results)
