@@ -8,6 +8,13 @@ on:
     branches:
       - main
 
+env:
+  # Hostname of your registry
+  REGISTRY: docker.io
+  # Image repository, without hostname and tag
+  IMAGE_NAME: ${{ github.repository }}
+  #SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
+
 jobs:
   lint:
     name: Lint Python code
@@ -73,6 +80,13 @@ jobs:
 
       - name: Build Docker image
         run: docker build -f Dockerfile -t sync-fitbit-pro-connect:latest .
+
+      - name: Authenticate to registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Docker Scout Scan
         run: |
