@@ -34,16 +34,6 @@ def main() -> None:
         database=os.getenv(key="INFLUXDB_DATABASE"),
     )
 
-    ### test
-    date = datetime.now()
-    date_str = date.strftime("%Y-%m-%d")
-    resource_list = [
-        ("calories", "Calories_Intraday", "1min", 1),
-        ("distance", "Distance_Intraday", "1min", 1000),
-        ("steps", "Steps_Intraday", "1min", 1),
-        ("heart", "HeartRate_Intraday", "1min", 1),
-    ]
-
     # Setup syncronizer
     syncHelper = syncronizer.Syncronizer(fitbitClient=fitbitClient, dbClient=dbClient)
 
