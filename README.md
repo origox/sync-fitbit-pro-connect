@@ -14,6 +14,29 @@ These steps need to be performed if there are no access and refresh tokens.
 
 Note, Same process can be follow here: https://dev.fitbit.com/build/reference/web-api/troubleshooting-guide/oauth2-tutorial/ 
 
+# Environment Variables
+
+This project uses the following environment variables:
+
+- `FITBIT_CLIENT_ID`: Your Fitbit client ID.
+- `FITBIT_CLIENT_SECRET`: Your Fitbit client secret.
+- `FITBIT_CLIENT_SCOPE`: The scopes your Fitbit app needs access to.
+- `FITBIT_DEVICE_NAME`: The name of your Fitbit device.
+- `FITBIT_LOCAL_TIMEZONE`: Your local timezone.
+- `FITBIT_LOG_FILE_PATH`: The path where Fitbit logs will be stored.
+- `FITBIT_TOKEN_FILE_PATH`: The path where Fitbit tokens will be stored.
+- `OVERWRITE_LOG_FILE`: Whether to overwrite the log file or not. Set this to `True` or `False`.
+- `FITBIT_LANGUAGE`: The language used by Fitbit.
+- `INFLUXDB_HOST`: The host of your InfluxDB.
+- `INFLUXDB_ORG`: The organization of your InfluxDB.
+- `INFLUXDB_PORT`: The port of your InfluxDB.
+- `INFLUXDB_USERNAME`: The username of your InfluxDB.
+- `INFLUXDB_TOKEN`: The token of your InfluxDB.
+- `INFLUXDB_DATABASE`: The database of your InfluxDB.
+
+
+
+
 
 # API - Intraday
 
@@ -24,6 +47,7 @@ Note, Same process can be follow here: https://dev.fitbit.com/build/reference/we
 |Get Heart Rate Intraday by Date|/1/user/[user-id]/activities/heart/date/[start-date]/[detail-level].json|*get_intraday_heart_rate_by_date|heartrate|24 hours|HR zones/RestingHR||
 |Get HRV Intraday by Interval|/1/user/[user-id]/hrv/date/[startDate]/[endDate]/all.json|*get_intraday_hrv_by_interval|heartrate|30 days|HRV_Intraday||  
 |Get SpO2 Intraday by Interval|/1/user/[user-id]/spo2/date/[start-date]/[end-date]/all.json|*get_spo2_by_interval|oxygen_saturation|30 days|SPO2_Intraday||
+
 
 # API - Time series
 
@@ -36,10 +60,12 @@ Note, Same process can be follow here: https://dev.fitbit.com/build/reference/we
 |Get SpO2 Summary by Interval|/1/user/[user-id]/spo2/date/[start-date]/[end-date].json|*get_spo2_summary_by_interval|oxygen_saturation|None|SPO2|
 |Get Activity Time Series by Date Range|/1/user/[user-id]/activities/[resource-path]/date/[start-date]/[end-date].json|*get_activity_summary_by_interval|activity|1095|[distance/calories/steps/Activity Minutes]|
 
+
 # API - Device
 | Resource | API | Internal API | Scope | Limit | InfluxDB - bucket | Grafana |
 |---|---|---|---|---|---|---|
 |Get Devices|/1/user/[user-id]/devices.json|*get_battery_level|settings|None|DeviceBatteryLevel||
+
 
 ### Inspiration
 - [ex. 1](https://github.com/pkpio/fitbit-googlefit)
