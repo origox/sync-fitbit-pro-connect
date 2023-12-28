@@ -47,14 +47,6 @@ def main() -> None:
     # Setup syncronizer
     syncHelper = syncronizer.Syncronizer(fitbitClient=fitbitClient, dbClient=dbClient)
 
-    # # only for testing
-    # for i in range(0, 10):
-    #     date = datetime.now() - timedelta(days=i)
-    #     date_str = date.strftime("%Y-%m-%d")
-    #     syncHelper.SyncFitbitActivitiesToInfluxdb(date_str)
-    # syncHelper.SyncFitbitToInfluxdb("2023-12-20", "2023-12-27")
-    # print("Done")
-
     # Schedule syncronizer
     schedule.every(interval=1).minutes.do(
         job_func=syncHelper.SyncFitbitActivitiesToInfluxdb,
