@@ -76,7 +76,7 @@ jobs:
       - name: Setup Docker
         uses: docker-practice/actions-setup-docker@v1
         with:
-          docker_version: 20.10.8
+          docker_version: 23.0.3
 
       - name: Build Docker image
         run: docker build -f Dockerfile -t sync-fitbit-pro-connect:latest .
