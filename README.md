@@ -66,6 +66,14 @@ This project uses the following environment variables:
 |---|---|---|---|---|---|---|
 |Get Devices|/1/user/[user-id]/devices.json|*get_battery_level|settings|None|DeviceBatteryLevel||
 
+# Docker
+```sh
+# Build docker image from Dockerfile
+docker build -t sync-fitbit-pro-connect:2.0.0 .
+
+# Run docker container
+docker run --env-file=.env sync-fitbit-pro-connect:2.0.0
+```
 
 ### Inspiration
 - [ex. 1](https://github.com/pkpio/fitbit-googlefit)
