@@ -6,6 +6,7 @@
 **/.dockerignore
 **/.env
 **/fitbit_tokens.json
+**/*.log
 **/.git
 **/.gitignore
 **/.github  
