@@ -134,7 +134,7 @@ class FitbitOauth2Client:
                 )
                 resp = self._send_request(url, headers, data, request_type)
         if resp.status_code == 429:
-            reset = int(resp.headers.get("fitbit-rate-limit-reset", 0))
+            reset = int(resp.headers.get("fitbit-rate-limit-reset", 0)) + 60
             logging.info(f"Rate limit reached, sleeping for {reset} seconds")
             time.sleep(reset)
             resp = self._send_request(url, headers, data, request_type)
