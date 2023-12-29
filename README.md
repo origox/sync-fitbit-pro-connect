@@ -72,7 +72,14 @@ This project uses the following environment variables:
 docker build -t sync-fitbit-pro-connect:2.0.0 .
 
 # Run docker container
-docker run --env-file=.env sync-fitbit-pro-connect:2.0.0
+docker run --rm  --env-file=.env -v ./app/auth:/app/app/auth -v ./logs:/app/logs input:10.0.0   
+docker run --rm --env-file=.env -v ./app/auth:/app/app/auth -v ./logs:/app/logs origox/sync-fitbit-pro-connect:sha-c9ffd6b
+
+# Test auth script
+~/dev/sync-fitbit-pro-connect# python3 app/auth/get_authorization_code.py
+
+# Test run from cmdline
+~/dev/sync-fitbit-pro-connect# python3 app/main.py 
 ```
 # DEVSECOPS
 [DevSecOps - Github Actions](https://www.youtube.com/watch?v=gLJdrXPn0ns)

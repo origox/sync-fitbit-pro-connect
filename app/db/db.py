@@ -18,6 +18,7 @@ class InfluxDBClient:
                 database=self.database,
                 verify_ssl=self.verify_ssl,
             )
+            logging.info("Successfully connected to influxdb database")
 
         except InfluxDBError as err:
             logging.error("Unable to connect with influxdb database! Aborted")
