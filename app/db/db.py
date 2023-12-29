@@ -17,13 +17,6 @@ class InfluxDBClient:
                 org=self.org,
                 database=self.database,
                 verify_ssl=self.verify_ssl,
-                batch_size=500,
-                flush_interval=10_000,
-                jitter_interval=2_000,
-                retry_interval=5_000,
-                max_retries=5,
-                max_retry_delay=30_000,
-                exponential_base=2,
             )
             logging.info("Successfully connected to influxdb database")
 
@@ -40,7 +33,7 @@ class InfluxDBClient:
             point = (
                 Point("measurement").tag("location", "paris").field("temperature", 70)
             )
-            self.client.write(point)  # write synchronously
+            #### self.client.write(point)  # write synchronously
 
             logging.info("Successfully updated influxdb database with new points")
         except InfluxDBError as err:
