@@ -94,7 +94,7 @@ def main():
         url=token_url,
         headers=headers,
         data=data,
-        timeout=os.getenv(key="REQUEST_TIMEOUT"),
+        timeout=int(os.getenv(key="REQUEST_TIMEOUT")),
     )
 
     # Check that the response status code is 200 (OK)
@@ -118,7 +118,7 @@ def main():
         access_token=access_token,
         refresh_token=refresh_token,
     )
-    json.dump(credentials, open(os.getenv(key="FITBIT_TOKEN_FILE_PATH"), "w"))
+    json.dump(credentials, open(os.getenv(key="FITBIT_TOKEN_FILE_PATH"), "w+"))
 
 
 if __name__ == "__main__":

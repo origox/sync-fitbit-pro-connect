@@ -74,6 +74,8 @@ docker build -t sync-fitbit-pro-connect:2.0.0 .
 # Run docker container
 docker run --env-file=.env sync-fitbit-pro-connect:2.0.0
 ```
+# DEVSECOPS
+[DevSecOps - Github Actions](https://www.youtube.com/watch?v=gLJdrXPn0ns)
 
 ### Inspiration
 - [ex. 1](https://github.com/pkpio/fitbit-googlefit)
