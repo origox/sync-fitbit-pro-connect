@@ -208,6 +208,7 @@ class FitbitClient:
             initial_access_token=self.initial_access_token,
             initial_refresh_token=self.initial_refresh_token,
         )
+        logging.info("Fitbit client initialized")
 
     def get_intraday_activity_by_date(self, date_str, measurement_list):
         collected_records = []

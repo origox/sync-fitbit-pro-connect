@@ -22,6 +22,8 @@ class Syncronizer:
         self.fitbitClient = fitbitClient
         self.dbClient = dbClient
 
+        logging.info("Syncronizer initialized")
+
     def SyncFitbitActivitiesToInfluxdb(self, date: str) -> None:
         """Syncronize intradata for all resources/activities with 24 hours limit from Fitbit to InfluxDB
 
