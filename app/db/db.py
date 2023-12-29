@@ -23,6 +23,9 @@ class InfluxDBClient:
         except InfluxDBError as err:
             logging.error("Unable to connect with influxdb database! Aborted")
             raise InfluxDBError("InfluxDB connection failed:" + str(err))
+        except Exception as err:
+            logging.error("Unable to connect with influxdb database! Aborted")
+            raise Exception("InfluxDB connection failed:" + str(err))
 
     def write_points_to_influxdb(self, points) -> None:
         try:
@@ -37,4 +40,7 @@ class InfluxDBClient:
 
             logging.info("Successfully updated influxdb database with new points")
         except InfluxDBError as err:
-            logging.error("Unable to connect with influxdb database! " + str(err))
+            logging.error("Unable to connect2 with influxdb database! " + str(err))
+
+        except Exception as err:
+            logging.error("Unable to connect2 with influxdb database! " + str(err))
