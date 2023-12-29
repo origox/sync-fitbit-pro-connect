@@ -17,6 +17,7 @@ class InfluxDBClient:
                 org=self.org,
                 database=self.database,
                 verify_ssl=self.verify_ssl,
+                timeout=60000,
             )
             logging.info("Successfully connected to influxdb database")
 
@@ -44,3 +45,4 @@ class InfluxDBClient:
 
         except Exception as err:
             logging.error("Unable to connect2 with influxdb database! " + str(err))
+            logging.error(f"failing points: {points}")
