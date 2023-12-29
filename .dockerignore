@@ -19,5 +19,6 @@
 **/docker-compose*
 **/compose*
 **/Dockerfile*
+deployment.yaml
 LICENSE
 README.md

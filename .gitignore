@@ -164,3 +164,6 @@ fitbit_tokens.json
 
 # Visual Studio Code
 .vscode/
+
+# k3s test
+deployment.yaml
