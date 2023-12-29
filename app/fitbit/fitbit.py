@@ -226,7 +226,13 @@ class FitbitClient:
 
             res = self.client.make_request(ur)
 
-            data = res["activities-" + measurement[0] + "-intraday"]["dataset"]
+            key = "activities-" + measurement[0] + "-intraday"
+
+            if key not in res:
+                logging.error(f"Key {key} not found in response")
+                continue
+
+            data = res[key]["dataset"]
             if data != None:
                 for value in data:
                     log_time = datetime.fromisoformat(date_str + "T" + value["time"])
@@ -260,33 +266,41 @@ class FitbitClient:
     def get_intraday_hrv_by_interval(self, start_date: str, end_date: str):
         collected_records = []
 
-        hrv_data_listx = self.client.make_request(
-            "https://api.fitbit.com/1/user/-/hrv/date/"
-            + start_date
-            + "/"
-            + end_date
-            + ".json"
-        )
+        try:
+            hrv_data_listx = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/hrv/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
+            )
 
-        hrv_data_list = hrv_data_listx["hrv"]
+            hrv_data_list = hrv_data_listx["hrv"]
 
-        if hrv_data_list != None:
-            for data in hrv_data_list:
-                log_time = datetime.fromisoformat(data["dateTime"] + "T" + "00:00:00")
-                utc_time = (
-                    LOCAL_TIMEZONE.localize(log_time).astimezone(pytz.utc).isoformat()
-                )
-                collected_records.append(
-                    {
-                        "measurement": "HRV_Intraday",
-                        "time": utc_time,
-                        "tags": {"Device": self.device_name},
-                        "fields": {
-                            "dailyRmssd": data["value"]["dailyRmssd"],
-                            "deepRmssd": data["value"]["deepRmssd"],
-                        },
-                    }
-                )
+            if hrv_data_list != None:
+                for data in hrv_data_list:
+                    log_time = datetime.fromisoformat(
+                        data["dateTime"] + "T" + "00:00:00"
+                    )
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": "HRV_Intraday",
+                            "time": utc_time,
+                            "tags": {"Device": self.device_name},
+                            "fields": {
+                                "dailyRmssd": data["value"]["dailyRmssd"],
+                                "deepRmssd": data["value"]["deepRmssd"],
+                            },
+                        }
+                    )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
+
         return collected_records
 
     def get_intraday_heart_rate_by_date(self, date_str: str):
@@ -299,192 +313,14 @@ class FitbitClient:
 
         logging.info(f"URL to request: {ur}")
 
-        HR_zones_data_list = self.client.make_request(ur)["activities-heart"]
+        try:
+            HR_zones_data_list = self.client.make_request(ur)["activities-heart"]
 
-        if HR_zones_data_list != None:
-            for data in HR_zones_data_list:
-                log_time = datetime.fromisoformat(data["dateTime"] + "T" + "00:00:00")
-                utc_time = (
-                    LOCAL_TIMEZONE.localize(log_time).astimezone(pytz.utc).isoformat()
-                )
-                collected_records.append(
-                    {
-                        "measurement": "HR zones",
-                        "time": utc_time,
-                        "tags": {"Device": self.device_name},
-                        "fields": {
-                            "Normal": data["value"]["heartRateZones"][0]["minutes"],
-                            "Fat Burn": data["value"]["heartRateZones"][1]["minutes"],
-                            "Cardio": data["value"]["heartRateZones"][2]["minutes"],
-                            "Peak": data["value"]["heartRateZones"][3]["minutes"],
-                        },
-                    }
-                )
-                if "restingHeartRate" in data["value"]:
-                    collected_records.append(
-                        {
-                            "measurement": "RestingHR",
-                            "time": utc_time,
-                            "tags": {"Device": self.device_name},
-                            "fields": {"value": data["value"]["restingHeartRate"]},
-                        }
+            if HR_zones_data_list != None:
+                for data in HR_zones_data_list:
+                    log_time = datetime.fromisoformat(
+                        data["dateTime"] + "T" + "00:00:00"
                     )
-        return collected_records
-
-    def get_body_data_by_interval(self, start_date: str, end_date: str):
-        collected_records = []
-
-        body_list = self.client.make_request(
-            "https://api.fitbit.com/1/user/-/body/log/weight/date/"
-            + start_date
-            + "/"
-            + end_date
-            + ".json"
-        )["weight"]
-
-        if body_list != None:
-            for data in body_list:
-                log_time = datetime.fromisoformat(data["date"] + "T" + data["time"])
-                utc_time = (
-                    LOCAL_TIMEZONE.localize(log_time).astimezone(pytz.utc).isoformat()
-                )
-                collected_records.append(
-                    {
-                        "measurement": "Body",
-                        "time": utc_time,
-                        "tags": {"Device": data["source"]},
-                        "fields": {
-                            "bmi": data["bmi"],
-                            # "fat": data["fat"],
-                            "weight": data["weight"],
-                        },
-                    }
-                )
-        return collected_records
-
-    def get_temperature_skin_by_interval(self, start_date: str, end_date: str):
-        collected_records = []
-
-        temperature_list = self.client.make_request(
-            "https://api.fitbit.com/1/user/-/temp/skin/date/"
-            + start_date
-            + "/"
-            + end_date
-            + ".json"
-        )["tempSkin"]
-
-        if temperature_list != None:
-            for data in temperature_list:
-                log_time = datetime.fromisoformat(data["dateTime"] + "T" + "00:00:00")
-                utc_time = (
-                    LOCAL_TIMEZONE.localize(log_time).astimezone(pytz.utc).isoformat()
-                )
-                collected_records.append(
-                    {
-                        "measurement": "TempSkin",
-                        "time": utc_time,
-                        "tags": {"Device": self.device_name},
-                        "fields": {
-                            "temp": data["value"]["nightlyRelative"],
-                        },
-                    }
-                )
-        return collected_records
-
-    # Get VO2 Max Summary by Interval
-    def get_vo2max_cardio_score_by_interval(self, start_date: str, end_date: str):
-        collected_records = []
-
-        vo2_list = self.client.make_request(
-            "https://api.fitbit.com/1/user/-/cardioscore/date/"
-            + start_date
-            + "/"
-            + end_date
-            + ".json"
-        )["cardioScore"]
-
-        if vo2_list != None:
-            for data in vo2_list:
-                log_time = datetime.fromisoformat(data["dateTime"] + "T" + "00:00:00")
-                utc_time = (
-                    LOCAL_TIMEZONE.localize(log_time).astimezone(pytz.utc).isoformat()
-                )
-                collected_records.append(
-                    {
-                        "measurement": "CardioScore",
-                        "time": utc_time,
-                        "tags": {"Device": self.device_name},
-                        "fields": {
-                            "vo2Low": list(
-                                map(int, data["value"]["vo2Max"].split("-"))
-                            )[0],
-                            "vo2High": list(
-                                map(int, data["value"]["vo2Max"].split("-"))
-                            )[1],
-                        },
-                    }
-                )
-        return collected_records
-
-    def get_sleep_log_by_interval(self, start_date: str, end_date: str):
-        collected_records = []
-
-        sleep_data = self.client.make_request(
-            "https://api.fitbit.com/1.2/user/-/sleep/date/"
-            + start_date
-            + "/"
-            + end_date
-            + ".json"
-        )["sleep"]
-
-        if sleep_data != None:
-            for record in sleep_data:
-                log_time = datetime.fromisoformat(record["startTime"])
-                utc_time = (
-                    LOCAL_TIMEZONE.localize(log_time).astimezone(pytz.utc).isoformat()
-                )
-                try:
-                    minutesLight = record["levels"]["summary"]["light"]["minutes"]
-                    minutesREM = record["levels"]["summary"]["rem"]["minutes"]
-                    minutesDeep = record["levels"]["summary"]["deep"]["minutes"]
-                except:
-                    minutesLight = record["levels"]["summary"]["asleep"]["minutes"]
-                    minutesREM = record["levels"]["summary"]["restless"]["minutes"]
-                    minutesDeep = 0
-
-                collected_records.append(
-                    {
-                        "measurement": "Sleep Summary",
-                        "time": utc_time,
-                        "tags": {
-                            "Device": self.device_name,
-                            "isMainSleep": record["isMainSleep"],
-                        },
-                        "fields": {
-                            "efficiency": record["efficiency"],
-                            "minutesAfterWakeup": record["minutesAfterWakeup"],
-                            "minutesAsleep": record["minutesAsleep"],
-                            "minutesToFallAsleep": record["minutesToFallAsleep"],
-                            "minutesInBed": record["timeInBed"],
-                            "minutesAwake": record["minutesAwake"],
-                            "minutesLight": minutesLight,
-                            "minutesREM": minutesREM,
-                            "minutesDeep": minutesDeep,
-                        },
-                    }
-                )
-
-                sleep_level_mapping = {
-                    "wake": 3,
-                    "rem": 2,
-                    "light": 1,
-                    "deep": 0,
-                    "asleep": 1,
-                    "restless": 2,
-                    "awake": 3,
-                }
-                for sleep_stage in record["levels"]["data"]:
-                    log_time = datetime.fromisoformat(sleep_stage["dateTime"])
                     utc_time = (
                         LOCAL_TIMEZONE.localize(log_time)
                         .astimezone(pytz.utc)
@@ -492,46 +328,263 @@ class FitbitClient:
                     )
                     collected_records.append(
                         {
-                            "measurement": "Sleep Levels",
+                            "measurement": "HR zones",
+                            "time": utc_time,
+                            "tags": {"Device": self.device_name},
+                            "fields": {
+                                "Normal": data["value"]["heartRateZones"][0]["minutes"],
+                                "Fat Burn": data["value"]["heartRateZones"][1][
+                                    "minutes"
+                                ],
+                                "Cardio": data["value"]["heartRateZones"][2]["minutes"],
+                                "Peak": data["value"]["heartRateZones"][3]["minutes"],
+                            },
+                        }
+                    )
+                    if "restingHeartRate" in data["value"]:
+                        collected_records.append(
+                            {
+                                "measurement": "RestingHR",
+                                "time": utc_time,
+                                "tags": {"Device": self.device_name},
+                                "fields": {"value": data["value"]["restingHeartRate"]},
+                            }
+                        )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
+
+        return collected_records
+
+    def get_body_data_by_interval(self, start_date: str, end_date: str):
+        collected_records = []
+
+        try:
+            body_list = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/body/log/weight/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
+            )["weight"]
+
+            if body_list != None:
+                for data in body_list:
+                    log_time = datetime.fromisoformat(data["date"] + "T" + data["time"])
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": "Body",
+                            "time": utc_time,
+                            "tags": {"Device": data["source"]},
+                            "fields": {
+                                "bmi": data["bmi"],
+                                # "fat": data["fat"],
+                                "weight": data["weight"],
+                            },
+                        }
+                    )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
+
+        return collected_records
+
+    def get_temperature_skin_by_interval(self, start_date: str, end_date: str):
+        collected_records = []
+
+        try:
+            temperature_list = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/temp/skin/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
+            )["tempSkin"]
+
+            if temperature_list != None:
+                for data in temperature_list:
+                    log_time = datetime.fromisoformat(
+                        data["dateTime"] + "T" + "00:00:00"
+                    )
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": "TempSkin",
+                            "time": utc_time,
+                            "tags": {"Device": self.device_name},
+                            "fields": {
+                                "temp": data["value"]["nightlyRelative"],
+                            },
+                        }
+                    )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
+
+        return collected_records
+
+    # Get VO2 Max Summary by Interval
+    def get_vo2max_cardio_score_by_interval(self, start_date: str, end_date: str):
+        collected_records = []
+
+        try:
+            vo2_list = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/cardioscore/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
+            )["cardioScore"]
+
+            if vo2_list != None:
+                for data in vo2_list:
+                    log_time = datetime.fromisoformat(
+                        data["dateTime"] + "T" + "00:00:00"
+                    )
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": "CardioScore",
+                            "time": utc_time,
+                            "tags": {"Device": self.device_name},
+                            "fields": {
+                                "vo2Low": list(
+                                    map(int, data["value"]["vo2Max"].split("-"))
+                                )[0],
+                                "vo2High": list(
+                                    map(int, data["value"]["vo2Max"].split("-"))
+                                )[1],
+                            },
+                        }
+                    )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
+
+        return collected_records
+
+    def get_sleep_log_by_interval(self, start_date: str, end_date: str):
+        collected_records = []
+
+        try:
+            sleep_data = self.client.make_request(
+                "https://api.fitbit.com/1.2/user/-/sleep/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
+            )["sleep"]
+
+            if sleep_data != None:
+                for record in sleep_data:
+                    log_time = datetime.fromisoformat(record["startTime"])
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    try:
+                        minutesLight = record["levels"]["summary"]["light"]["minutes"]
+                        minutesREM = record["levels"]["summary"]["rem"]["minutes"]
+                        minutesDeep = record["levels"]["summary"]["deep"]["minutes"]
+                    except:
+                        minutesLight = record["levels"]["summary"]["asleep"]["minutes"]
+                        minutesREM = record["levels"]["summary"]["restless"]["minutes"]
+                        minutesDeep = 0
+
+                    collected_records.append(
+                        {
+                            "measurement": "Sleep Summary",
                             "time": utc_time,
                             "tags": {
                                 "Device": self.device_name,
                                 "isMainSleep": record["isMainSleep"],
                             },
                             "fields": {
-                                "level": sleep_level_mapping[sleep_stage["level"]],
-                                "duration_seconds": sleep_stage["seconds"],
+                                "efficiency": record["efficiency"],
+                                "minutesAfterWakeup": record["minutesAfterWakeup"],
+                                "minutesAsleep": record["minutesAsleep"],
+                                "minutesToFallAsleep": record["minutesToFallAsleep"],
+                                "minutesInBed": record["timeInBed"],
+                                "minutesAwake": record["minutesAwake"],
+                                "minutesLight": minutesLight,
+                                "minutesREM": minutesREM,
+                                "minutesDeep": minutesDeep,
                             },
                         }
                     )
-                wake_time = datetime.fromisoformat(record["endTime"])
-                utc_wake_time = (
-                    LOCAL_TIMEZONE.localize(wake_time).astimezone(pytz.utc).isoformat()
-                )
-                collected_records.append(
-                    {
-                        "measurement": "Sleep Levels",
-                        "time": utc_wake_time,
-                        "tags": {
-                            "Device": self.device_name,
-                            "isMainSleep": record["isMainSleep"],
-                        },
-                        "fields": {
-                            "level": sleep_level_mapping["wake"],
-                            "duration_seconds": None,
-                        },
+
+                    sleep_level_mapping = {
+                        "wake": 3,
+                        "rem": 2,
+                        "light": 1,
+                        "deep": 0,
+                        "asleep": 1,
+                        "restless": 2,
+                        "awake": 3,
                     }
+                    for sleep_stage in record["levels"]["data"]:
+                        log_time = datetime.fromisoformat(sleep_stage["dateTime"])
+                        utc_time = (
+                            LOCAL_TIMEZONE.localize(log_time)
+                            .astimezone(pytz.utc)
+                            .isoformat()
+                        )
+                        collected_records.append(
+                            {
+                                "measurement": "Sleep Levels",
+                                "time": utc_time,
+                                "tags": {
+                                    "Device": self.device_name,
+                                    "isMainSleep": record["isMainSleep"],
+                                },
+                                "fields": {
+                                    "level": sleep_level_mapping[sleep_stage["level"]],
+                                    "duration_seconds": sleep_stage["seconds"],
+                                },
+                            }
+                        )
+                    wake_time = datetime.fromisoformat(record["endTime"])
+                    utc_wake_time = (
+                        LOCAL_TIMEZONE.localize(wake_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": "Sleep Levels",
+                            "time": utc_wake_time,
+                            "tags": {
+                                "Device": self.device_name,
+                                "isMainSleep": record["isMainSleep"],
+                            },
+                            "fields": {
+                                "level": sleep_level_mapping["wake"],
+                                "duration_seconds": None,
+                            },
+                        }
+                    )
+                logging.info(
+                    "Recorded Sleep data for date " + start_date + " to " + end_date
                 )
-            logging.info(
-                "Recorded Sleep data for date " + start_date + " to " + end_date
-            )
-        else:
-            logging.error(
-                "Recording failed : Sleep data for date "
-                + start_date
-                + " to "
-                + end_date
-            )
+            else:
+                logging.error(
+                    "Recording failed : Sleep data for date "
+                    + start_date
+                    + " to "
+                    + end_date
+                )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
 
         return collected_records
 
@@ -539,57 +592,68 @@ class FitbitClient:
     def get_battery_level(self):
         collected_records = []
 
-        device = self.client.make_request(
-            "https://api.fitbit.com/1/user/-/devices.json"
-        )[0]
+        try:
+            device = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/devices.json"
+            )[0]
 
-        if device != None:
-            collected_records.append(
-                {
-                    "measurement": "DeviceBatteryLevel",
-                    "time": LOCAL_TIMEZONE.localize(
-                        datetime.fromisoformat(device["lastSyncTime"])
-                    )
-                    .astimezone(pytz.utc)
-                    .isoformat(),
-                    "fields": {"value": float(device["batteryLevel"])},
-                }
-            )
-            logging.info("Recorded battery level for " + self.device_name)
-        else:
-            logging.error("Recording battery level failed : " + self.device_name)
+            if device != None:
+                collected_records.append(
+                    {
+                        "measurement": "DeviceBatteryLevel",
+                        "time": LOCAL_TIMEZONE.localize(
+                            datetime.fromisoformat(device["lastSyncTime"])
+                        )
+                        .astimezone(pytz.utc)
+                        .isoformat(),
+                        "fields": {"value": float(device["batteryLevel"])},
+                    }
+                )
+                logging.info("Recorded battery level for " + self.device_name)
+            else:
+                logging.error("Recording battery level failed : " + self.device_name)
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
 
         return collected_records
 
     # Breathing rate
     def get_breathing_rate_by_interval(self, start_date: str, end_date: str):
         collected_records = []
-        br_data_list = self.client.make_request(
-            "https://api.fitbit.com/1/user/-/br/date/"
-            + start_date
-            + "/"
-            + end_date
-            + ".json"
-        )["br"]
-        if br_data_list != None:
-            for data in br_data_list:
-                log_time = datetime.fromisoformat(data["dateTime"] + "T" + "00:00:00")
-                utc_time = (
-                    LOCAL_TIMEZONE.localize(log_time).astimezone(pytz.utc).isoformat()
+
+        try:
+            br_data_list = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/br/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
+            )["br"]
+            if br_data_list != None:
+                for data in br_data_list:
+                    log_time = datetime.fromisoformat(
+                        data["dateTime"] + "T" + "00:00:00"
+                    )
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": "BreathingRate",
+                            "time": utc_time,
+                            "tags": {"Device": self.device_name},
+                            "fields": {"value": data["value"]["breathingRate"]},
+                        }
+                    )
+                logging.info("Recorded BR for date " + start_date + " to " + end_date)
+            else:
+                logging.error(
+                    "Recording failed : BR for date " + start_date + " to " + end_date
                 )
-                collected_records.append(
-                    {
-                        "measurement": "BreathingRate",
-                        "time": utc_time,
-                        "tags": {"Device": self.device_name},
-                        "fields": {"value": data["value"]["breathingRate"]},
-                    }
-                )
-            logging.info("Recorded BR for date " + start_date + " to " + end_date)
-        else:
-            logging.error(
-                "Recording failed : BR for date " + start_date + " to " + end_date
-            )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
 
         return collected_records
 
@@ -597,34 +661,38 @@ class FitbitClient:
     def get_spo2_by_interval(self, start_date: str, end_date: str):
         collected_records = []
 
-        spo2_data_list = self.client.make_request(
-            "https://api.fitbit.com/1/user/-/spo2/date/"
-            + start_date
-            + "/"
-            + end_date
-            + "/all.json"
-        )
-        if spo2_data_list != None:
-            for days in spo2_data_list:
-                data = days["minutes"]
-                for record in data:
-                    log_time = datetime.fromisoformat(record["minute"])
-                    utc_time = (
-                        LOCAL_TIMEZONE.localize(log_time)
-                        .astimezone(pytz.utc)
-                        .isoformat()
-                    )
-                    collected_records.append(
-                        {
-                            "measurement": "SPO2_Intraday",
-                            "time": utc_time,
-                            "tags": {"Device": self.device_name},
-                            "fields": {
-                                "value": float(record["value"]),
-                            },
-                        }
-                    )
-            logging.info("Recorded SPO2 for date " + start_date + " to " + end_date)
+        try:
+            spo2_data_list = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/spo2/date/"
+                + start_date
+                + "/"
+                + end_date
+                + "/all.json"
+            )
+            if spo2_data_list != None:
+                for days in spo2_data_list:
+                    data = days["minutes"]
+                    for record in data:
+                        log_time = datetime.fromisoformat(record["minute"])
+                        utc_time = (
+                            LOCAL_TIMEZONE.localize(log_time)
+                            .astimezone(pytz.utc)
+                            .isoformat()
+                        )
+                        collected_records.append(
+                            {
+                                "measurement": "SPO2_Intraday",
+                                "time": utc_time,
+                                "tags": {"Device": self.device_name},
+                                "fields": {
+                                    "value": float(record["value"]),
+                                },
+                            }
+                        )
+                logging.info("Recorded SPO2 for date " + start_date + " to " + end_date)
+
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
 
         return collected_records
 
@@ -632,142 +700,159 @@ class FitbitClient:
     def get_spo2_summary_by_interval(self, start_date: str, end_date: str):
         collected_records = []
 
-        data_list = self.client.make_request(
-            "https://api.fitbit.com/1/user/-/spo2/date/"
-            + start_date
-            + "/"
-            + end_date
-            + ".json"
-        )
-        if data_list != None:
-            for data in data_list:
-                log_time = datetime.fromisoformat(data["dateTime"] + "T" + "00:00:00")
-                utc_time = (
-                    LOCAL_TIMEZONE.localize(log_time).astimezone(pytz.utc).isoformat()
-                )
-                collected_records.append(
-                    {
-                        "measurement": "SPO2",
-                        "time": utc_time,
-                        "tags": {"Device": self.device_name},
-                        "fields": {
-                            "avg": data["value"]["avg"],
-                            "max": data["value"]["max"],
-                            "min": data["value"]["min"],
-                        },
-                    }
-                )
-            logging.info("Recorded Avg SPO2 for date " + start_date + " to " + end_date)
-        else:
-            logging.error(
-                "Recording failed : Avg SPO2 for date " + start_date + " to " + end_date
+        try:
+            data_list = self.client.make_request(
+                "https://api.fitbit.com/1/user/-/spo2/date/"
+                + start_date
+                + "/"
+                + end_date
+                + ".json"
             )
+            if data_list != None:
+                for data in data_list:
+                    log_time = datetime.fromisoformat(
+                        data["dateTime"] + "T" + "00:00:00"
+                    )
+                    utc_time = (
+                        LOCAL_TIMEZONE.localize(log_time)
+                        .astimezone(pytz.utc)
+                        .isoformat()
+                    )
+                    collected_records.append(
+                        {
+                            "measurement": "SPO2",
+                            "time": utc_time,
+                            "tags": {"Device": self.device_name},
+                            "fields": {
+                                "avg": data["value"]["avg"],
+                                "max": data["value"]["max"],
+                                "min": data["value"]["min"],
+                            },
+                        }
+                    )
+                logging.info(
+                    "Recorded Avg SPO2 for date " + start_date + " to " + end_date
+                )
+            else:
+                logging.error(
+                    "Recording failed : Avg SPO2 for date "
+                    + start_date
+                    + " to "
+                    + end_date
+                )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
+
         return collected_records
 
     # get activity summary
     def get_activity_summary_by_interval(self, start_date: str, end_date: str):
         collected_records = []
 
-        activity_minutes_list = [
-            "minutesSedentary",
-            "minutesLightlyActive",
-            "minutesFairlyActive",
-            "minutesVeryActive",
-        ]
-        for activity_type in activity_minutes_list:
-            activity_minutes_data_list = self.client.make_request(
-                "https://api.fitbit.com/1/user/-/activities/tracker/"
-                + activity_type
-                + "/date/"
-                + start_date
-                + "/"
-                + end_date
-                + ".json"
-            )["activities-tracker-" + activity_type]
-            if activity_minutes_data_list != None:
-                for data in activity_minutes_data_list:
-                    log_time = datetime.fromisoformat(
-                        data["dateTime"] + "T" + "00:00:00"
-                    )
-                    utc_time = (
-                        LOCAL_TIMEZONE.localize(log_time)
-                        .astimezone(pytz.utc)
-                        .isoformat()
-                    )
-                    collected_records.append(
-                        {
-                            "measurement": "Activity Minutes",
-                            "time": utc_time,
-                            "tags": {"Device": self.device_name},
-                            "fields": {activity_type: int(data["value"])},
-                        }
-                    )
-                logging.info(
-                    "Recorded "
+        try:
+            activity_minutes_list = [
+                "minutesSedentary",
+                "minutesLightlyActive",
+                "minutesFairlyActive",
+                "minutesVeryActive",
+            ]
+            for activity_type in activity_minutes_list:
+                activity_minutes_data_list = self.client.make_request(
+                    "https://api.fitbit.com/1/user/-/activities/tracker/"
                     + activity_type
-                    + "for date "
+                    + "/date/"
                     + start_date
-                    + " to "
+                    + "/"
                     + end_date
-                )
-            else:
-                logging.error(
-                    "Recording failed : "
+                    + ".json"
+                )["activities-tracker-" + activity_type]
+                if activity_minutes_data_list != None:
+                    for data in activity_minutes_data_list:
+                        log_time = datetime.fromisoformat(
+                            data["dateTime"] + "T" + "00:00:00"
+                        )
+                        utc_time = (
+                            LOCAL_TIMEZONE.localize(log_time)
+                            .astimezone(pytz.utc)
+                            .isoformat()
+                        )
+                        collected_records.append(
+                            {
+                                "measurement": "Activity Minutes",
+                                "time": utc_time,
+                                "tags": {"Device": self.device_name},
+                                "fields": {activity_type: int(data["value"])},
+                            }
+                        )
+                    logging.info(
+                        "Recorded "
+                        + activity_type
+                        + "for date "
+                        + start_date
+                        + " to "
+                        + end_date
+                    )
+                else:
+                    logging.error(
+                        "Recording failed : "
+                        + activity_type
+                        + " for date "
+                        + start_date
+                        + " to "
+                        + end_date
+                    )
+
+            activity_others_list = ["distance", "calories", "steps"]
+            for activity_type in activity_others_list:
+                activity_others_data_list = self.client.make_request(
+                    "https://api.fitbit.com/1/user/-/activities/tracker/"
                     + activity_type
-                    + " for date "
+                    + "/date/"
                     + start_date
-                    + " to "
+                    + "/"
                     + end_date
-                )
+                    + ".json"
+                )["activities-tracker-" + activity_type]
 
-        activity_others_list = ["distance", "calories", "steps"]
-        for activity_type in activity_others_list:
-            activity_others_data_list = self.client.make_request(
-                "https://api.fitbit.com/1/user/-/activities/tracker/"
-                + activity_type
-                + "/date/"
-                + start_date
-                + "/"
-                + end_date
-                + ".json"
-            )["activities-tracker-" + activity_type]
+                if activity_others_data_list != None:
+                    for data in activity_others_data_list:
+                        log_time = datetime.fromisoformat(
+                            data["dateTime"] + "T" + "00:00:00"
+                        )
+                        utc_time = (
+                            LOCAL_TIMEZONE.localize(log_time)
+                            .astimezone(pytz.utc)
+                            .isoformat()
+                        )
+                        activity_name = (
+                            "Total Steps" if activity_type == "steps" else activity_type
+                        )
+                        collected_records.append(
+                            {
+                                "measurement": activity_name,
+                                "time": utc_time,
+                                "tags": {"Device": self.device_name},
+                                "fields": {"value": float(data["value"])},
+                            }
+                        )
+                    logging.info(
+                        "Recorded "
+                        + activity_name
+                        + " for date "
+                        + start_date
+                        + " to "
+                        + end_date
+                    )
+                else:
+                    logging.error(
+                        "Recording failed : "
+                        + activity_name
+                        + " for date "
+                        + start_date
+                        + " to "
+                        + end_date
+                    )
+        except KeyError as e:
+            logging.error(f"KeyError: {e}")
 
-            if activity_others_data_list != None:
-                for data in activity_others_data_list:
-                    log_time = datetime.fromisoformat(
-                        data["dateTime"] + "T" + "00:00:00"
-                    )
-                    utc_time = (
-                        LOCAL_TIMEZONE.localize(log_time)
-                        .astimezone(pytz.utc)
-                        .isoformat()
-                    )
-                    activity_name = (
-                        "Total Steps" if activity_type == "steps" else activity_type
-                    )
-                    collected_records.append(
-                        {
-                            "measurement": activity_name,
-                            "time": utc_time,
-                            "tags": {"Device": self.device_name},
-                            "fields": {"value": float(data["value"])},
-                        }
-                    )
-                logging.info(
-                    "Recorded "
-                    + activity_name
-                    + " for date "
-                    + start_date
-                    + " to "
-                    + end_date
-                )
-            else:
-                logging.error(
-                    "Recording failed : "
-                    + activity_name
-                    + " for date "
-                    + start_date
-                    + " to "
-                    + end_date
-                )
         return collected_records

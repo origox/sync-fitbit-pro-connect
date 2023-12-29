@@ -113,12 +113,12 @@ def main():
 
     # Save the access token and refresh token
     credentials = dict(
-        client_id=os.getenv(key="FITBIT_CLIENT_ID"),
-        client_secret=os.getenv(key="FITBIT_CLIENT_SECRET"),
+        # client_id=os.getenv(key="FITBIT_CLIENT_ID"),
+        # client_secret=os.getenv(key="FITBIT_CLIENT_SECRET"),
         access_token=access_token,
         refresh_token=refresh_token,
     )
-    json.dump(credentials, open("auth/fitbit.json", "w"))
+    json.dump(credentials, open(os.getenv(key="FITBIT_TOKEN_FILE_PATH"), "w"))
 
 
 if __name__ == "__main__":
