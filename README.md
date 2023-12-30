@@ -25,11 +25,13 @@ This project uses the following environment variables:
 - `FITBIT_LOCAL_TIMEZONE`: Your local timezone.
 - `FITBIT_LOG_FILE_PATH`: The path where Fitbit logs will be stored.
 - `FITBIT_TOKEN_FILE_PATH`: The path where Fitbit tokens will be stored.
+- `FITBIT_INITIAL_ACCESS_TOKEN`: Initial access token, used when no file avail. 
+- `FITBIT_INITIAL_REFRESH_TOKEN`: Initial refresh token, used when no file avail.
 - `OVERWRITE_LOG_FILE`: Whether to overwrite the log file or not. Set this to `True` or `False`.
 - `FITBIT_LANGUAGE`: The language used by Fitbit.
 - `INFLUXDB_HOST`: The host of your InfluxDB.
 - `INFLUXDB_ORG`: The organization of your InfluxDB.
-- `INFLUXDB_PORT`: The port of your InfluxDB.
+- `INFLUXDB_PORT`: The port of your InfluxDB. (currently not used, included in host, TODO refact.)
 - `INFLUXDB_USERNAME`: The username of your InfluxDB.
 - `INFLUXDB_TOKEN`: The token of your InfluxDB.
 - `INFLUXDB_DATABASE`: The database of your InfluxDB.
@@ -67,6 +69,10 @@ This project uses the following environment variables:
 |Get Devices|/1/user/[user-id]/devices.json|*get_battery_level|settings|None|DeviceBatteryLevel||
 
 # Docker
+- Build of Docker image is part of CI/CD flow
+- [Images stored on Docker Hub ](https://hub.docker.com/r/origox/sync-fitbit-pro-connect)
+
+## Dev stuff
 ```sh
 # Build docker image from Dockerfile
 docker build -t sync-fitbit-pro-connect:2.0.0 .
@@ -82,7 +88,12 @@ docker run --rm --env-file=.env -v ./app/auth:/app/app/auth -v ./logs:/app/logs 
 ~/dev/sync-fitbit-pro-connect# python3 app/main.py 
 ```
 # DEVSECOPS
-[DevSecOps - Github Actions](https://www.youtube.com/watch?v=gLJdrXPn0ns)
+- DevSecOps is part of CI/CD flow
+- [Insiration: DevSecOps - Github Actions](https://www.youtube.com/watch?v=gLJdrXPn0ns)
+
+# Kubernetes
+- test of deployment, /tmp/fitbit/deployment.yaml, is working
+- todo: add proper sops encrypted secrets, include into my gitops repo
 
 ### Inspiration
 - [ex. 1](https://github.com/pkpio/fitbit-googlefit)
