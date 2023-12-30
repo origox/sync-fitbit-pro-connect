@@ -1,6 +1,8 @@
 # sync-fitbit-pro-connect
 [![CI/CD Workflow](https://github.com/origox/sync-fitbit-pro-connect/actions/workflows/main.yaml/badge.svg)](https://github.com/origox/sync-fitbit-pro-connect/actions/workflows/main.yaml)
 
+This repo contains a Python app that on a regular interval collect Fitbit data from Google and store data into a influx database.  
+
 # Prereqs
 These steps need to be performed if there are no access and refresh tokens.
 
